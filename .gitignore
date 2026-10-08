@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+dist-store/
+.next/
+build/
+src-tauri/target/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+.kilo/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Docker volumes
+pgdata/
+redisdata/
+
+# Testing
+coverage/
+
+# Debug artifacts
+.playwright-mcp/
+test-results/
+
+# Supabase CLI temp
+supabase/.temp/
+
+# Signing keys
+*.key
+*.key.pub
