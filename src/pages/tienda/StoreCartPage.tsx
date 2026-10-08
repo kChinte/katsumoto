@@ -1,19 +1,20 @@
 import { useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "@/components/store/CartContext";
-import { useStorePublicBranches, useStorePublicStock, useStorePublicProducts } from "@/hooks/useStorePublic";
+import { useStorePublicStock, useStorePublicProducts, useStorePublicPriceTiers } from "@/hooks/useStorePublic";
 import { formatCents } from "@/lib/format";
 import { TAX_AFFECTATION_TYPES } from "@/lib/constants";
 import { calculateInvoice } from "@/lib/calculations";
+import { getEffectivePriceInfo } from "@/lib/pricing";
 import { ProductImage } from "@/components/ProductImage";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2, ShoppingCart, ArrowLeft, ArrowRight, Shield, Truck, Lock } from "lucide-react";
 
 export default function StoreCartPage() {
   const { items, removeItem, updateQuantity, clearCart, totalItems, syncProducts } = useCart();
-  const { data: branches = [] } = useStorePublicBranches();
   const { data: branchStocks = [] } = useStorePublicStock();
   const { data: allProducts = [] } = useStorePublicProducts();
+  const { data: priceTiers = [] } = useStorePublicPriceTiers();
 
   useEffect(() => {
     if (allProducts.length > 0) syncProducts(allProducts);
@@ -29,18 +30,29 @@ export default function StoreCartPage() {
   }, [branchStocks]);
 
   const formItems = useMemo(() =>
-    items.map((item) => ({
-      product_id: item.product.id,
-      product_name: item.product.name,
-      quantity: item.quantity,
-      unit_price_cents: item.product.price_cents,
-      discount_percent: 0,
-      tax_affectation: item.product.tax_affectation || "gravado",
-    })),
-    [items]
+    items.map((item) => {
+      const priceInfo = getEffectivePriceInfo(item.product, priceTiers, item.quantity);
+      return {
+        product_id: item.product.id,
+        product_name: item.product.name,
+        quantity: item.quantity,
+        unit_price_cents: priceInfo.priceCents,
+        discount_percent: 0,
+        tax_affectation: item.product.tax_affectation || "gravado",
+      };
+    }),
+    [items, priceTiers]
   );
 
   const calc = useMemo(() => formItems.length > 0 ? calculateInvoice(formItems) : null, [formItems]);
+  const tierSavingsCents = useMemo(
+    () =>
+      items.reduce((sum, item) => {
+        const priceInfo = getEffectivePriceInfo(item.product, priceTiers, item.quantity);
+        return sum + Math.max(0, (item.product.price_cents ?? 0) - priceInfo.priceCents) * item.quantity;
+      }, 0),
+    [items, priceTiers]
+  );
 
   const subtotalCents = calc?.subtotal_cents ?? 0;
   const grandTotal = calc?.total_cents ?? 0;
@@ -80,7 +92,8 @@ export default function StoreCartPage() {
         <div className="lg:col-span-2 space-y-3">
           {items.map((item) => {
             const taxInfo = TAX_AFFECTATION_TYPES[item.product.tax_affectation || "gravado"];
-            const lineTotal = (item.product.price_cents ?? 0) * item.quantity;
+            const priceInfo = getEffectivePriceInfo(item.product, priceTiers, item.quantity);
+            const lineTotal = priceInfo.priceCents * item.quantity;
             return (
               <div key={item.product.id} className="flex items-center gap-4 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow">
                 <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
@@ -97,8 +110,13 @@ export default function StoreCartPage() {
                     )}
                   </div>
                   <p className="text-sm font-extrabold text-orange-600 dark:text-orange-400 mt-1.5">
-                    {formatCents(item.product.price_cents)} <span className="text-[10px] font-normal text-muted-foreground">c/u</span>
+                    {formatCents(priceInfo.priceCents)} <span className="text-[10px] font-normal text-muted-foreground">c/u</span>
                   </p>
+                  {!priceInfo.isRetail && (
+                    <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                      {priceInfo.tierLabel || "Precio por volumen"} desde {priceInfo.tierMinQuantity}+ uds.
+                    </p>
+                  )}
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <button onClick={() => removeItem(item.product.id)} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors group">
@@ -135,6 +153,12 @@ export default function StoreCartPage() {
                 <span className="text-slate-500">Subtotal ({totalItems} ítems)</span>
                 <span className="font-semibold">{formatCents(subtotalCents)}</span>
               </div>
+              {tierSavingsCents > 0 && (
+                <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                  <span>Ahorro por escala</span>
+                  <span className="font-semibold">-{formatCents(tierSavingsCents)}</span>
+                </div>
+              )}
               <div className="flex justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
                 <span className="font-extrabold text-lg text-slate-900 dark:text-white">Total</span>
                 <span className="font-extrabold text-2xl text-orange-600 dark:text-orange-400">{formatCents(grandTotal)}</span>

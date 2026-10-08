@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import type { Product } from "@/lib/types";
+import type { PriceTier, Product } from "@/lib/types";
 import type { Branch, BranchStock } from "@/lib/types";
 
 export const storePublicService = {
@@ -21,6 +21,15 @@ export const storePublicService = {
       .order("name");
     if (error) throw error;
     return data.map((p: Record<string, unknown>) => ({ ...p, stock: (p as Record<string, unknown>).stock ?? 0 } as Product));
+  },
+
+  async getPriceTiers(): Promise<PriceTier[]> {
+    const { data, error } = await supabase
+      .from("price_tiers")
+      .select("id, product_id, min_quantity, price_cents, label")
+      .order("min_quantity");
+    if (error) throw error;
+    return (data || []) as PriceTier[];
   },
 
   async getBranchStock(): Promise<BranchStock[]> {

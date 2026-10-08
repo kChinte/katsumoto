@@ -1,13 +1,14 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 import { storePublicService } from "@/services/store-public.service";
-import { useStorePublicBranches } from "@/hooks/useStorePublic";
+import { useStorePublicBranches, useStorePublicProducts, useStorePublicPriceTiers } from "@/hooks/useStorePublic";
 import { useCart } from "@/components/store/CartContext";
 import { useTaxConfig } from "@/lib/tax-config-context";
 import { getDepartments, getProvincesForDepartment, getDistrictsForProvince } from "@/lib/geo-peru";
 import { formatCents } from "@/lib/format";
 import { calculateInvoice } from "@/lib/calculations";
+import { getEffectivePriceInfo } from "@/lib/pricing";
 import { DOCUMENT_TYPES, TAX_AFFECTATION_TYPES } from "@/lib/constants";
 import { ProductImage } from "@/components/ProductImage";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ import {
   Shield, Truck, Lock, MapPin, TreePine,
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import { sanitizeName, sanitizePhone, sanitizeEmail, sanitizeDocumentNumber, sanitizeAddress, sanitizeNotes } from "@/lib/sanitize";
+import { sanitizeName, sanitizePhone, sanitizeEmail, sanitizeDocumentNumber, sanitizeNotes } from "@/lib/sanitize";
 import type { DocumentType, TaxAffectation } from "@/lib/types";
 
 interface CustomerForm {
@@ -41,8 +42,10 @@ const emptyForm: CustomerForm = {
 };
 
 export default function StoreCheckout() {
-  const { items, clearCart, totalItems, totalCents: _totalCents } = useCart();
+  const { items, clearCart, totalItems, syncProducts } = useCart();
   const { data: branches = [] } = useStorePublicBranches();
+  const { data: allProducts = [] } = useStorePublicProducts();
+  const { data: priceTiers = [] } = useStorePublicPriceTiers();
   const { determineTaxForSale } = useTaxConfig();
   const _navigate = useNavigate();
   const [form, setForm] = useState<CustomerForm>(emptyForm);
@@ -57,6 +60,10 @@ export default function StoreCheckout() {
     () => branches.find(b => b.type === "online" && b.is_active),
     [branches]
   );
+
+  useEffect(() => {
+    if (allProducts.length > 0) syncProducts(allProducts);
+  }, [allProducts, syncProducts]);
 
   const taxDetermination = useMemo(() => {
     if (!onlineBranch || items.length === 0) return null;
@@ -89,12 +96,12 @@ export default function StoreCheckout() {
         product_id: item.product.id,
         product_name: item.product.name,
         quantity: item.quantity,
-        unit_price_cents: item.product.price_cents,
+        unit_price_cents: getEffectivePriceInfo(item.product, priceTiers, item.quantity).priceCents,
         discount_percent: 0,
         tax_affectation: taxAffectation,
       };
     }),
-    [items, taxDetermination]
+    [items, taxDetermination, priceTiers]
   );
 
   const calc = useMemo(() => formItems.length > 0 ? calculateInvoice(formItems) : null, [formItems]);
@@ -370,6 +377,7 @@ export default function StoreCheckout() {
               <div className="space-y-3 max-h-60 overflow-auto mb-4">
                 {items.map((item) => {
                   const taxInfo = TAX_AFFECTATION_TYPES[item.product.tax_affectation || "gravado"];
+                  const priceInfo = getEffectivePriceInfo(item.product, priceTiers, item.quantity);
                   return (
                     <div key={item.product.id} className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800">
@@ -381,8 +389,13 @@ export default function StoreCheckout() {
                           <span className="text-[10px] text-muted-foreground">×{item.quantity}</span>
                           {taxInfo && <span className={`text-[8px] px-1 py-0.5 rounded font-bold ${taxInfo.solidColor}`}>{taxInfo.label}</span>}
                         </div>
+                        {!priceInfo.isRetail && (
+                          <p className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 truncate">
+                            {priceInfo.tierLabel || "Precio por volumen"}: {formatCents(priceInfo.priceCents)} c/u
+                          </p>
+                        )}
                       </div>
-                      <p className="text-xs font-bold text-slate-900 dark:text-white tabular-nums">{formatCents(item.product.price_cents * item.quantity)}</p>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white tabular-nums">{formatCents(priceInfo.priceCents * item.quantity)}</p>
                     </div>
                   );
                 })}
