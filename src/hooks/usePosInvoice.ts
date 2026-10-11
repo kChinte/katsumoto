@@ -31,7 +31,7 @@ const CONSUMIDOR_FINAL_DNI = "00000000";
 
 export function usePosInvoice(cart: CartItem[], calc: InvoiceCalculation | null) {
   const queryClient = useQueryClient();
-  const { branches: _branches, branchStocks, selectedBranchId, findBranch } = useBranches();
+  const { branches, branchStocks, selectedBranchId, findBranch } = useBranches();
   const { registers, activeRegister } = useRegisters();
   const { openRegister: openRegisterMutation } = useRegisterMutations();
   const { clients } = useClients();
@@ -152,14 +152,14 @@ export function usePosInvoice(cart: CartItem[], calc: InvoiceCalculation | null)
     for (const item of cart) {
       const currentStock = branchId === "all"
         ? item.product.stock
-        : getBranchStock(branchStocks, branchId, item.product.id);
+        : getBranchStock(branchStocks, branchId, item.product.id, branches);
       if (item.quantity > currentStock) {
         showError(`Stock insuficiente para ${item.product.name}. Disponible: ${currentStock}, en carrito: ${item.quantity}`);
         return;
       }
     }
     setPaymentOpen(true);
-  }, [calc, cart, canSell, isWarehouse, openRegister, invoiceType, clientId, branchStocks, branchId]);
+  }, [calc, cart, canSell, isWarehouse, openRegister, invoiceType, clientId, branchStocks, branchId, branches]);
 
   const createInvoiceMutation = useMutation({
     mutationFn: async ({
@@ -204,6 +204,8 @@ export function usePosInvoice(cart: CartItem[], calc: InvoiceCalculation | null)
         activeBranch.id,
         method,
         openRegister.id,
+        null,
+        activeBranch.type === "online" ? "admin_online_pos" : "pos",
       );
 
       const invoiceNumber = formatInvoiceNumber(result.serie, result.correlativo);

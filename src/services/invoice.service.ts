@@ -2,7 +2,7 @@ import { supabase, getCurrentOrgId } from "@/lib/supabase";
 import { calculateInvoice, type InvoiceCalculation } from "@/lib/calculations";
 import { IGV_RATE } from "@/lib/constants/tax";
 import { auditService } from "@/services/audit.service";
-import type { Invoice, InvoiceItem, InvoiceFormData } from "@/lib/types";
+import type { Invoice, InvoiceItem, InvoiceFormData, SalesChannel } from "@/lib/types";
 
 const VALID_INVOICE_TRANSITIONS: Record<string, string[]> = {
   draft: ["issued", "cancelled"],
@@ -64,7 +64,9 @@ export const invoiceService = {
     branchId: string,
     paymentMethod: string | null,
     registerId: string | null,
-    referenceInvoiceId?: string | null
+    referenceInvoiceId?: string | null,
+    salesChannel: SalesChannel = "admin_manual",
+    sourceOrderId?: string | null
   ): Promise<{ id: string; serie: string; correlativo: number }> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("No autenticado");
@@ -101,7 +103,7 @@ export const invoiceService = {
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       const correlativo = await this.getNextCorrelativo(serie);
 
-      const { data, error } = await supabase.rpc("create_invoice_with_items", {
+      const rpcParams = {
         p_organization_id: orgId,
         p_serie: serie,
         p_correlativo: correlativo,
@@ -122,7 +124,23 @@ export const invoiceService = {
         p_created_by: user.id,
         p_reference_invoice_id: referenceInvoiceId || null,
         p_items: rpcItems,
-      });
+        p_sales_channel: salesChannel,
+        p_source_order_id: sourceOrderId || null,
+      };
+
+      let { data, error } = await supabase.rpc("create_invoice_with_items", rpcParams);
+
+      if (
+        error &&
+        (error.code === "PGRST202" ||
+          error.message?.includes("p_sales_channel") ||
+          error.message?.includes("p_source_order_id"))
+      ) {
+        const legacyParams: Record<string, unknown> = { ...rpcParams };
+        delete legacyParams.p_sales_channel;
+        delete legacyParams.p_source_order_id;
+        ({ data, error } = await supabase.rpc("create_invoice_with_items", legacyParams));
+      }
 
       if (!error) {
         auditService.log("invoice.create", "invoice", data, undefined, {

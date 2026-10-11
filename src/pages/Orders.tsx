@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useOrders } from "@/hooks/useOrders";
 import { useBranches } from "@/hooks/useBranches";
-import { getBranchStock, getWarehouseBranchId } from "@/lib/utils/stock";
+import { getBranchStock, getStoreStockBranchId } from "@/lib/utils/stock";
 import { formatCents, formatDate } from "@/lib/format";
 import { TAX_AFFECTATION_TYPES } from "@/lib/constants";
 import { usePagination } from "@/hooks/usePagination";
@@ -45,12 +45,12 @@ export default function Orders() {
   const [viewOrder, setViewOrder] = useState<StoreOrder | null>(null);
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
 
-  const warehouseBranchId = useMemo(() => getWarehouseBranchId(branches), [branches]);
+  const storeStockBranchId = useMemo(() => getStoreStockBranchId(branches), [branches]);
 
   const getWarehouseStockForProduct = useMemo(() => {
-    if (!warehouseBranchId) return (_productId: string) => 0;
-    return (productId: string) => getBranchStock(branchStocks, warehouseBranchId, productId);
-  }, [warehouseBranchId, branchStocks]);
+    if (!storeStockBranchId) return (_productId: string) => 0;
+    return (productId: string) => getBranchStock(branchStocks, storeStockBranchId, productId);
+  }, [storeStockBranchId, branchStocks]);
 
   const orders = useMemo(() => storeOrders.filter(o => statusFilter === "all" || o.status === statusFilter), [storeOrders, statusFilter]);
   const pendingCount = useMemo(() => storeOrders.filter(o => o.status === "pending").length, [storeOrders]);

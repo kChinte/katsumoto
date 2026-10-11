@@ -1,17 +1,19 @@
 import { useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "@/components/store/CartContext";
-import { useStorePublicStock, useStorePublicProducts, useStorePublicPriceTiers } from "@/hooks/useStorePublic";
+import { useStorePublicBranches, useStorePublicStock, useStorePublicProducts, useStorePublicPriceTiers } from "@/hooks/useStorePublic";
 import { formatCents } from "@/lib/format";
 import { TAX_AFFECTATION_TYPES } from "@/lib/constants";
 import { calculateInvoice } from "@/lib/calculations";
 import { getEffectivePriceInfo } from "@/lib/pricing";
+import { getBranchStock, getStoreStockBranchId } from "@/lib/utils/stock";
 import { ProductImage } from "@/components/ProductImage";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2, ShoppingCart, ArrowLeft, ArrowRight, Shield, Truck, Lock } from "lucide-react";
 
 export default function StoreCartPage() {
   const { items, removeItem, updateQuantity, clearCart, totalItems, syncProducts } = useCart();
+  const { data: branches = [] } = useStorePublicBranches();
   const { data: branchStocks = [] } = useStorePublicStock();
   const { data: allProducts = [] } = useStorePublicProducts();
   const { data: priceTiers = [] } = useStorePublicPriceTiers();
@@ -20,14 +22,12 @@ export default function StoreCartPage() {
     if (allProducts.length > 0) syncProducts(allProducts);
   }, [allProducts, syncProducts]);
 
+  const storeStockBranchId = useMemo(() => getStoreStockBranchId(branches), [branches]);
+
   const getStoreStock = useMemo(() => {
-    if (branchStocks.length === 0) return (_productId: string) => 0;
-    return (_productId: string) => {
-      return branchStocks
-        .filter((bs) => bs.product_id === _productId)
-        .reduce((sum, bs) => sum + bs.stock, 0);
-    };
-  }, [branchStocks]);
+    if (!storeStockBranchId || branchStocks.length === 0) return (_productId: string) => 0;
+    return (productId: string) => getBranchStock(branchStocks, storeStockBranchId, productId);
+  }, [branchStocks, storeStockBranchId]);
 
   const formItems = useMemo(() =>
     items.map((item) => {

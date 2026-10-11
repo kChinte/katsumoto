@@ -12,12 +12,16 @@ values (
 )
 on conflict (id) do update set name = excluded.name, ruc = excluded.ruc;
 
-insert into public.branches (id, organization_id, name, code, type, address, department_code, province_code, district_code, is_selva_zone, invoice_serie_prefix, is_active, is_default)
+insert into public.branches (id, organization_id, name, code, type, address, department_code, province_code, district_code, is_selva_zone, invoice_serie_prefix, stock_source_branch_id, is_active, is_default)
 values
-  ('11111111-1111-4111-8111-111111111111', '7e80b22f-b06a-4025-937a-5f9d62d78733', 'Almacen Central', 'ALM', 'warehouse', 'Pichanaqui', '12', '1206', '120606', true, 'F001', true, false),
-  ('22222222-2222-4222-8222-222222222222', '7e80b22f-b06a-4025-937a-5f9d62d78733', 'Sede Pichanaqui', 'PICH', 'pos', 'Pichanaqui', '12', '1206', '120606', true, 'F001', true, true),
-  ('33333333-3333-4333-8333-333333333333', '7e80b22f-b06a-4025-937a-5f9d62d78733', 'Tienda Virtual', 'WEB', 'online', 'Pichanaqui', '12', '1206', '120606', true, 'B001', true, false)
-on conflict (organization_id, code) do update set name = excluded.name, type = excluded.type, is_active = true;
+  ('11111111-1111-4111-8111-111111111111', '7e80b22f-b06a-4025-937a-5f9d62d78733', 'Almacen Central', 'ALM', 'warehouse', 'Pichanaqui', '12', '1206', '120606', true, 'F001', null, true, false),
+  ('22222222-2222-4222-8222-222222222222', '7e80b22f-b06a-4025-937a-5f9d62d78733', 'Sede Pichanaqui', 'PICH', 'pos', 'Pichanaqui', '12', '1206', '120606', true, 'F001', null, true, true),
+  ('33333333-3333-4333-8333-333333333333', '7e80b22f-b06a-4025-937a-5f9d62d78733', 'Tienda Virtual', 'WEB', 'online', 'Pichanaqui', '12', '1206', '120606', true, 'B001', '11111111-1111-4111-8111-111111111111', true, false)
+on conflict (organization_id, code) do update set
+  name = excluded.name,
+  type = excluded.type,
+  stock_source_branch_id = excluded.stock_source_branch_id,
+  is_active = true;
 
 insert into public.customers (id, organization_id, name, document_type, document_number, address)
 values
@@ -39,6 +43,7 @@ select b.id, p.id, case when b.type = 'warehouse' then 100 else 50 end, p.min_st
 from public.branches b
 cross join public.products p
 where b.organization_id = '7e80b22f-b06a-4025-937a-5f9d62d78733'
+  and b.stock_source_branch_id is null
   and p.organization_id = '7e80b22f-b06a-4025-937a-5f9d62d78733'
 on conflict (branch_id, product_id) do update set stock = excluded.stock, min_stock = excluded.min_stock, max_stock = excluded.max_stock;
 

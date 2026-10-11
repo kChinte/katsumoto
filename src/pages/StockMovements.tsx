@@ -31,6 +31,15 @@ const refTypeLabels: Record<string, string> = {
   invoice: "Comprobante", purchase: "Compra", manual: "Manual",
 };
 
+const sourceChannelLabels: Record<string, string> = {
+  pos: "POS",
+  admin_online_pos: "POS Tienda Virtual",
+  web_public: "Web Pública",
+  admin_manual: "Manual",
+  manual_adjustment: "Ajuste manual",
+  stock_transfer: "Transferencia",
+};
+
 export default function StockMovements() {
   const { branchMovements, selectedBranchId: branchId, getBranchName, isLoading: movementsLoading, error: movementsError } = useStockMovements();
   const { products, isLoading: productsLoading, error: productsError } = useProducts();
@@ -231,6 +240,16 @@ export default function StockMovements() {
                               <span className="text-orange-600 dark:text-orange-400"> → {getBranchName(m.transfer_to_branch_id)}</span>
                             )}
                           </>
+                        )}
+                        {m.sale_branch_id && m.sale_branch_id !== m.branch_id && (
+                          <span className="block text-blue-600 dark:text-blue-400 mt-0.5">
+                            Canal: {getBranchName(m.sale_branch_id)}
+                          </span>
+                        )}
+                        {m.source_channel && (
+                          <span className="block text-muted-foreground mt-0.5">
+                            {sourceChannelLabels[m.source_channel] || m.source_channel}
+                          </span>
                         )}
                       </td>
                       <td className="py-3 px-4 text-center hidden sm:table-cell">

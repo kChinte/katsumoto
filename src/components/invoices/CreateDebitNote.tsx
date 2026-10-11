@@ -120,6 +120,7 @@ export function CreateDebitNote({ invoice, open, onOpenChange, onSuccess }: Crea
         null,
         null,
         invoice.id,
+        invoice.sales_channel || "admin_manual",
       );
 
       showSuccess(`Nota de Débito ${result.serie}-${String(result.correlativo).padStart(6, "0")} creada`);

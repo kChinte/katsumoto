@@ -9,6 +9,7 @@ import { useInvoices } from "@/hooks/useInvoices";
 import { formatCents } from "@/lib/format";
 import { BRANCH_TYPES } from "@/lib/constants";
 import { branchFormSchema, type BranchFormValues } from "@/lib/schemas";
+import { resolveBranchId } from "@/lib/utils/stock";
 import { HelpHint } from "@/components/HelpHint";
 import { HELP_TEXTS } from "@/lib/help-texts";
 import { isUbigeoSelva } from "@/lib/tax-engine";
@@ -34,7 +35,7 @@ import { Building2, Warehouse, Store, Globe, Plus, Pencil, Trash2, MapPin, Phone
 
 const branchIcons: Record<string, LucideIcon> = { warehouse: Warehouse, pos: Store, online: Globe };
 
-const defaultValues: BranchFormValues = { name: "", code: "", type: "pos", address: "", phone: "", department_code: "", province_code: "", district_code: "" };
+const defaultValues: BranchFormValues = { name: "", code: "", type: "pos", address: "", phone: "", department_code: "", province_code: "", district_code: "", stock_source_branch_id: null };
 
 export default function Branches() {
   const { branches, branchStocks, isLoading: branchesLoading, error: branchesError } = useBranches();
@@ -56,6 +57,7 @@ export default function Branches() {
   const formDeptCode = watch("department_code");
   const formProvCode = watch("province_code");
   const formDistCode = watch("district_code");
+  const formStockSourceBranchId = watch("stock_source_branch_id");
 
   const departments = useMemo(() => getGeoDepartments(), []);
   const provinces = useMemo(() => formDeptCode ? getGeoProvinces(formDeptCode) : [], [formDeptCode]);
@@ -67,11 +69,16 @@ export default function Branches() {
   );
 
   const productMap = useMemo(() => new Map(products.map(p => [p.id, p])), [products]);
+  const stockSourceOptions = useMemo(
+    () => branches.filter((b) => b.is_active && b.type === "warehouse" && b.id !== editingBranch?.id),
+    [branches, editingBranch?.id],
+  );
 
   const branchStatsMap = useMemo(() => {
     const map = new Map<string, { totalItems: number; totalValue: number; lowStockCount: number; invoiceCount: number }>();
     for (const branch of branches) {
-      const branchStks = branchStocks.filter(bs => bs.branch_id === branch.id);
+      const physicalBranchId = resolveBranchId(branches, branch.id);
+      const branchStks = branchStocks.filter(bs => bs.branch_id === physicalBranchId);
       const totalItems = branchStks.filter(bs => bs.stock > 0).length;
       const totalValue = branchStks.reduce((sum, bs) => {
         const product = productMap.get(bs.product_id);
@@ -123,13 +130,17 @@ export default function Branches() {
       department_code: branch.department_code || "",
       province_code: branch.province_code || "",
       district_code: branch.district_code || "",
+      stock_source_branch_id: branch.stock_source_branch_id || null,
     });
     setDialogOpen(true);
   };
 
   const handleSave = async (data: BranchFormValues) => {
     try {
-      await saveBranchAsync(data, editingBranch);
+      await saveBranchAsync({
+        ...data,
+        stock_source_branch_id: data.type === "online" ? data.stock_source_branch_id || null : null,
+      }, editingBranch);
       setDialogOpen(false);
     } catch {
       // handled by onError
@@ -178,6 +189,9 @@ export default function Branches() {
           const totalValue = stats?.totalValue ?? 0;
           const lowStockCount = stats?.lowStockCount ?? 0;
           const invoiceCount = stats?.invoiceCount ?? 0;
+          const stockSourceName = branch.stock_source_branch_id
+            ? branches.find((b) => b.id === branch.stock_source_branch_id)?.name
+            : null;
 
           return (
             <Card key={branch.id} className="rounded-2xl shadow-sm hover:shadow-md transition-shadow">
@@ -205,6 +219,11 @@ export default function Branches() {
                 </div>
                 <h3 className="font-semibold text-sm mb-1">{branch.name}</h3>
                 <p className="text-xs text-muted-foreground font-mono mb-3">{branch.code} · {typeInfo?.label}</p>
+                {stockSourceName && (
+                  <p className="text-[11px] text-blue-600 dark:text-blue-400 font-medium -mt-2 mb-3">
+                    Stock espejo de {stockSourceName}
+                  </p>
+                )}
                 <div className="space-y-2 text-xs text-muted-foreground">
                   {branch.address && (
                     <div className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5 flex-shrink-0" /><span className="truncate">{branch.address}</span></div>
@@ -346,6 +365,28 @@ export default function Branches() {
               </div>
             </div>
             <p className="text-xs text-muted-foreground">{BRANCH_TYPES[formType]?.description}</p>
+            {formType === "online" && (
+              <div className="space-y-2">
+                <Label>Stock físico</Label>
+                <Select
+                  value={formStockSourceBranchId || "__own__"}
+                  onValueChange={(v) => setValue("stock_source_branch_id", v === "__own__" ? null : v)}
+                >
+                  <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__own__">Stock propio de Tienda Virtual</SelectItem>
+                    {stockSourceOptions.map((branch) => (
+                      <SelectItem key={branch.id} value={branch.id}>
+                        Usar stock de {branch.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Para unificar tienda y almacén, selecciona Almacen Central.
+                </p>
+              </div>
+            )}
             <DialogFooter>
               <Button variant="outline" type="button" onClick={() => setDialogOpen(false)} className="rounded-xl">Cancelar</Button>
               <Button type="submit" className="rounded-xl bg-orange-600 hover:bg-orange-700">

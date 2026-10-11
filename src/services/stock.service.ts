@@ -27,14 +27,28 @@ export const stockService = {
 
   async getMovementsByBranch(branchId: string): Promise<StockMovement[]> {
     const orgId = await getCurrentOrgId();
-    const { data, error } = await supabase
+    const query = supabase
       .from("stock_movements")
       .select("*")
       .eq("organization_id", orgId)
-      .eq("branch_id", branchId)
+      .or(`branch_id.eq.${branchId},sale_branch_id.eq.${branchId}`)
       .order("created_at", { ascending: false });
-    if (error) throw error;
-    return data;
+
+    const { data, error } = await query;
+    if (!error) return data;
+
+    if (error.message?.includes("sale_branch_id")) {
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("stock_movements")
+        .select("*")
+        .eq("organization_id", orgId)
+        .eq("branch_id", branchId)
+        .order("created_at", { ascending: false });
+      if (fallbackError) throw fallbackError;
+      return fallbackData;
+    }
+
+    throw error;
   },
 
   async adjust(

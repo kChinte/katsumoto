@@ -38,4 +38,5 @@ export interface BranchFormData {
   department_code?: string;
   province_code?: string;
   district_code?: string;
+  stock_source_branch_id?: string | null;
 }

@@ -5,6 +5,7 @@ import type { Customer } from "./customer";
 export type InvoiceType = "factura" | "boleta" | "nota_credito" | "nota_debito";
 export type InvoiceStatus = "draft" | "issued" | "accepted" | "paid" | "cancelled";
 export type PaymentMethod = "cash" | "debit_card" | "credit_card" | "transfer" | "yape" | "plin" | "credit";
+export type SalesChannel = "pos" | "admin_online_pos" | "web_public" | "admin_manual";
 
 // ---------- Invoice Item ----------
 export interface InvoiceItem {
@@ -33,6 +34,9 @@ export interface Invoice {
   invoice_type: InvoiceType;
   customer_id: string;
   branch_id: string;
+  stock_branch_id?: string | null;
+  sales_channel?: SalesChannel;
+  source_order_id?: string | null;
   status: InvoiceStatus;
   issue_date: string;
   due_date: string | null;

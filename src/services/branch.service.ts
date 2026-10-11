@@ -51,6 +51,7 @@ export const branchService = {
         department_code: formData.department_code || "",
         province_code: formData.province_code || "",
         district_code: formData.district_code || "",
+        stock_source_branch_id: formData.stock_source_branch_id || null,
         is_selva_zone,
         is_active: true,
         is_default: false,
@@ -65,9 +66,10 @@ export const branchService = {
     const orgId = await getCurrentOrgId();
     const updateData = buildUpdatePayload(formData, [
       "name", "code", "type", "address", "phone",
-      "department_code", "province_code", "district_code",
+      "department_code", "province_code", "district_code", "stock_source_branch_id",
     ]);
     if (updateData.code !== undefined) updateData.code = (updateData.code as string).toUpperCase();
+    if (updateData.stock_source_branch_id === "") updateData.stock_source_branch_id = null;
 
     if (formData.department_code !== undefined || formData.province_code !== undefined || formData.district_code !== undefined) {
       updateData.is_selva_zone = computeIsSelva({

@@ -17,6 +17,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Invoice, InvoiceStatus } from "@/lib/types";
 
+const salesChannelLabels: Record<string, string> = {
+  pos: "POS",
+  admin_online_pos: "POS Tienda Virtual",
+  web_public: "Web Pública",
+  admin_manual: "Manual",
+};
+
 interface InvoiceTableProps {
   invoices: Invoice[];
   getBranchName: (id: string) => string;
@@ -117,6 +124,11 @@ export function InvoiceTable({ invoices, getBranchName, onView, onUpdateStatus, 
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${st.color}`}>
                         <st.icon className="w-3 h-3" />{st.label}
                       </span>
+                      {invoice.sales_channel && (
+                        <Badge variant="secondary" className="text-[10px] rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
+                          {salesChannelLabels[invoice.sales_channel] || invoice.sales_channel}
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-sm text-foreground font-medium">{invoice.customer?.name}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">

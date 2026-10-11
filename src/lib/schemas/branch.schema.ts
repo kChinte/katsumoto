@@ -16,5 +16,6 @@ export const branchFormSchema = z.object({
   department_code: z.string().regex(/^\d{2}$|^$/, "Codigo dept. inválido (2 digitos)").default(""),
   province_code: z.string().regex(/^\d{4}$|^$/, "Codigo prov. inválido (4 digitos)").default(""),
   district_code: z.string().regex(/^\d{6}$|^$/, "Codigo dist. inválido (6 digitos)").default(""),
+  stock_source_branch_id: z.string().nullable().optional(),
 });
 export type BranchFormValues = z.infer<typeof branchFormSchema>;

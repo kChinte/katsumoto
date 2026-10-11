@@ -33,7 +33,7 @@ import { showSuccess, showError } from "@/utils/toast";
 export default function CreateInvoice() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { branches: _branches, branchStocks, selectedBranchId, findBranch, isLoading: branchesLoading } = useBranches();
+  const { branches, branchStocks, selectedBranchId, findBranch, isLoading: branchesLoading } = useBranches();
   const { products, isLoading: productsLoading } = useProducts();
   const { clients, isLoading: clientsLoading } = useClients();
   const { saveClientAsync } = useClientMutations();
@@ -86,9 +86,8 @@ export default function CreateInvoice() {
 
   const branchAwareProducts = useMemo(() => products.map(p => {
     if (branchId === "all") return p;
-    const bs = branchStocks.find(s => s.branch_id === branchId && s.product_id === p.id);
-    return { ...p, stock: bs?.stock ?? 0 };
-  }), [products, branchStocks, branchId]);
+    return { ...p, stock: getBranchStock(branchStocks, branchId, p.id, branches) };
+  }), [products, branchStocks, branchId, branches]);
 
   const addItem = () => {
     const product = branchAwareProducts.find((p) => p.id === selectedProductId);
@@ -206,6 +205,8 @@ export default function CreateInvoice() {
         activeBranch.id,
         null,
         null,
+        null,
+        "admin_manual",
       );
       const invoiceNumber = formatInvoiceNumber(result.serie, result.correlativo);
       showSuccess(`${INVOICE_TYPES[invoiceTypeRef.current].label} ${invoiceNumber} emitida`);
@@ -250,7 +251,7 @@ export default function CreateInvoice() {
     for (const item of data.items) {
       const currentStock = branchId === "all"
         ? products.find(p => p.id === item.productId)?.stock ?? 0
-        : getBranchStock(branchStocks, branchId, item.productId);
+        : getBranchStock(branchStocks, branchId, item.productId, branches);
       if (item.quantity > currentStock) {
         showError(`Stock insuficiente para ${item.productName}. Disponible: ${currentStock}, solicitado: ${item.quantity}`);
         return;
@@ -373,6 +374,7 @@ export default function CreateInvoice() {
             calc={calc}
             products={branchAwareProducts}
             branchStocks={branchStocks}
+            branches={branches}
             branchId={branchId}
             selectedProductId={selectedProductId}
             onSelectedProductIdChange={setSelectedProductId}

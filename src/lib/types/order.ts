@@ -1,6 +1,7 @@
 import type { Cents, DocumentType, TaxAffectation } from "./common";
 
 export type StoreOrderStatus = "pending" | "confirmed" | "processing" | "completed" | "cancelled";
+export type StoreOrderSourceChannel = "web_public" | "admin_online";
 
 export interface StoreOrderItem {
   id: string;
@@ -24,6 +25,8 @@ export interface StoreOrder {
   customer_document_type: DocumentType;
   customer_document_number: string;
   branch_id: string;
+  stock_branch_id?: string | null;
+  source_channel?: StoreOrderSourceChannel;
   shipping_address: string | null;
   shipping_department_code: string;
   shipping_province_code: string;

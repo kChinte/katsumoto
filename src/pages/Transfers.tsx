@@ -100,6 +100,7 @@ export default function Transfers() {
   const transfers = useMemo(() => movements.filter(m => m.movement_type === "transfer_out"), [movements]);
   const productMap = useMemo(() => new Map(products.map(p => [p.id, p])), [products]);
   const branchMap = useMemo(() => new Map(branches.map(b => [b.id, b])), [branches]);
+  const physicalBranches = useMemo(() => branches.filter((b) => b.is_active && !b.stock_source_branch_id), [branches]);
   const getProductName = useCallback((id: string) => productMap.get(id)?.name || "—", [productMap]);
   const getProductSku = useCallback((id: string) => productMap.get(id)?.sku || "", [productMap]);
   const getBranchName = useCallback((id: string) => branchMap.get(id)?.name || "—", [branchMap]);
@@ -262,7 +263,7 @@ export default function Transfers() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {branches.filter(b => b.is_active).map((branch) => {
+        {physicalBranches.map((branch) => {
           const Icon = branchIcons[branch.type] || Package;
           const stats = branchStatsMap.get(branch.id);
           return (
@@ -373,7 +374,7 @@ export default function Transfers() {
                 <Select value={fromBranchId} onValueChange={(v) => { setFromBranchId(v); setLines([]); }}>
                   <SelectTrigger className="rounded-xl"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                   <SelectContent>
-                    {branches.filter(b => b.is_active).map(b => (
+                    {physicalBranches.map(b => (
                       <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                     ))}
                   </SelectContent>
@@ -384,7 +385,7 @@ export default function Transfers() {
                 <Select value={toBranchId} onValueChange={setToBranchId}>
                   <SelectTrigger className="rounded-xl"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                   <SelectContent>
-                    {branches.filter(b => b.is_active && b.id !== fromBranchId).map(b => (
+                    {physicalBranches.filter(b => b.id !== fromBranchId).map(b => (
                       <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                     ))}
                   </SelectContent>

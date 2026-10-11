@@ -2,13 +2,14 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 import { storePublicService } from "@/services/store-public.service";
-import { useStorePublicBranches, useStorePublicProducts, useStorePublicPriceTiers } from "@/hooks/useStorePublic";
+import { useStorePublicBranches, useStorePublicProducts, useStorePublicPriceTiers, useStorePublicStock } from "@/hooks/useStorePublic";
 import { useCart } from "@/components/store/CartContext";
 import { useTaxConfig } from "@/lib/tax-config-context";
 import { getDepartments, getProvincesForDepartment, getDistrictsForProvince } from "@/lib/geo-peru";
 import { formatCents } from "@/lib/format";
 import { calculateInvoice } from "@/lib/calculations";
 import { getEffectivePriceInfo } from "@/lib/pricing";
+import { getBranchStock, getStoreStockBranchId } from "@/lib/utils/stock";
 import { DOCUMENT_TYPES, TAX_AFFECTATION_TYPES } from "@/lib/constants";
 import { ProductImage } from "@/components/ProductImage";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ export default function StoreCheckout() {
   const { data: branches = [] } = useStorePublicBranches();
   const { data: allProducts = [] } = useStorePublicProducts();
   const { data: priceTiers = [] } = useStorePublicPriceTiers();
+  const { data: branchStocks = [] } = useStorePublicStock();
   const { determineTaxForSale } = useTaxConfig();
   const _navigate = useNavigate();
   const [form, setForm] = useState<CustomerForm>(emptyForm);
@@ -60,6 +62,7 @@ export default function StoreCheckout() {
     () => branches.find(b => b.type === "online" && b.is_active),
     [branches]
   );
+  const storeStockBranchId = useMemo(() => getStoreStockBranchId(branches), [branches]);
 
   useEffect(() => {
     if (allProducts.length > 0) syncProducts(allProducts);
@@ -133,6 +136,19 @@ export default function StoreCheckout() {
     if (!canSubmit || !calc || !onlineBranch) return;
     setLoading(true);
     try {
+      if (!storeStockBranchId) {
+        showError("La tienda no tiene un almacén de stock configurado.");
+        return;
+      }
+
+      for (const item of items) {
+        const available = getBranchStock(branchStocks, storeStockBranchId, item.product.id);
+        if (item.quantity > available) {
+          showError(`Stock insuficiente para ${item.product.name}. Disponible: ${available}, solicitado: ${item.quantity}`);
+          return;
+        }
+      }
+
       const today = new Date().toISOString().split("T")[0].replace(/-/g, "");
       const randSuffix = String(Math.floor(Math.random() * 900) + 100);
       const number = `PED-${today}-${randSuffix}`;

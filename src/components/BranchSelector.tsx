@@ -30,11 +30,14 @@ export function BranchSelector() {
         </SelectItem>
         {branches.filter(b => b.is_active).map((branch) => {
           const Icon = branchIcons[branch.type] || Building2;
+          const sourceBranch = branch.stock_source_branch_id
+            ? branches.find((b) => b.id === branch.stock_source_branch_id)
+            : null;
           return (
             <SelectItem key={branch.id} value={branch.id}>
               <span className="flex items-center gap-2">
                 <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-                {branch.name}
+                {branch.name}{sourceBranch ? ` (stock: ${sourceBranch.name})` : ""}
               </span>
             </SelectItem>
           );

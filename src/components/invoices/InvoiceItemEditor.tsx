@@ -2,7 +2,7 @@ import type { UseFormRegister, UseFieldArrayRemove } from "react-hook-form";
 import type { FieldArrayWithId } from "react-hook-form";
 import type { CreateInvoiceFormValues } from "@/lib/schemas";
 import type { InvoiceCalculation } from "@/lib/calculations";
-import type { Product, BranchStock } from "@/lib/types";
+import type { Product, Branch, BranchStock } from "@/lib/types";
 import { formatCents, toCents } from "@/lib/format";
 import { TAX_AFFECTATION_TYPES } from "@/lib/constants";
 import { getBranchStock } from "@/lib/utils/stock";
@@ -20,6 +20,7 @@ interface InvoiceItemEditorProps {
   calc: InvoiceCalculation | null;
   products: Product[];
   branchStocks: BranchStock[];
+  branches: Branch[];
   branchId: string;
   selectedProductId: string;
   onSelectedProductIdChange: (id: string) => void;
@@ -35,6 +36,7 @@ export function InvoiceItemEditor({
   calc,
   products,
   branchStocks,
+  branches,
   branchId,
   selectedProductId,
   onSelectedProductIdChange,
@@ -74,7 +76,7 @@ export function InvoiceItemEditor({
             const product = products.find(p => p.id === field.productId);
             const taxInfo = product ? TAX_AFFECTATION_TYPES[product.tax_affectation || "gravado"] : null;
             const currentStock = product
-              ? (branchId === "all" ? product.stock : getBranchStock(branchStocks, branchId, product.id))
+              ? (branchId === "all" ? product.stock : getBranchStock(branchStocks, branchId, product.id, branches))
               : 0;
             const watchedQty = watchedItems[index]?.quantity ?? 0;
             const isOverStock = watchedQty > currentStock;

@@ -5,7 +5,7 @@ import { useStorePublicProducts, useStorePublicBranches, useStorePublicStock } f
 import { useCart } from "@/components/store/CartContext";
 import { formatCents } from "@/lib/format";
 import { CATEGORY_TREE } from "@/lib/constants";
-import { getBranchStock, getWarehouseBranchId } from "@/lib/utils/stock";
+import { getBranchStock, getStoreStockBranchId } from "@/lib/utils/stock";
 import { StoreProductCard } from "@/components/store/StoreProductCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -43,16 +43,12 @@ export default function StoreIndex() {
   const debouncedSearch = useDebounce(search);
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  const warehouseBranchId = useMemo(() => getWarehouseBranchId(branches), [branches]);
+  const storeStockBranchId = useMemo(() => getStoreStockBranchId(branches), [branches]);
 
   const getStoreStock = useMemo(() => {
-    if (branchStocks.length === 0) return (_productId: string) => 0;
-    return (_productId: string) => {
-      return branchStocks
-        .filter((bs) => bs.product_id === _productId)
-        .reduce((sum, bs) => sum + bs.stock, 0);
-    };
-  }, [branchStocks]);
+    if (!storeStockBranchId || branchStocks.length === 0) return (_productId: string) => 0;
+    return (productId: string) => getBranchStock(branchStocks, storeStockBranchId, productId);
+  }, [branchStocks, storeStockBranchId]);
 
   const familyFilter = searchParams.get("family") || "all";
   const groupFilter = searchParams.get("group") || "all";

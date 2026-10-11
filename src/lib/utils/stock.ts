@@ -26,10 +26,18 @@ export function getBranchStock(
 
 export function getTotalStock(
   branchStocks: BranchStock[],
-  productId: string
+  productId: string,
+  branches?: Branch[]
 ): number {
+  const physicalBranchIds = branches
+    ? branches.filter((b) => !b.stock_source_branch_id).map((b) => b.id)
+    : null;
   return branchStocks
-    .filter((bs) => bs.product_id === productId)
+    .filter(
+      (bs) =>
+        bs.product_id === productId &&
+        (!physicalBranchIds || physicalBranchIds.includes(bs.branch_id))
+    )
     .reduce((sum, bs) => sum + bs.stock, 0);
 }
 
@@ -96,4 +104,10 @@ export function getDisplayStock(stock: number, threshold = 20): string | number 
 
 export function getWarehouseBranchId(branches: Branch[]): string | null {
   return branches.find((b) => b.type === "warehouse" && b.is_active)?.id ?? null;
+}
+
+export function getStoreStockBranchId(branches: Branch[]): string | null {
+  const onlineBranch = branches.find((b) => b.type === "online" && b.is_active);
+  if (onlineBranch) return onlineBranch.stock_source_branch_id || onlineBranch.id;
+  return getWarehouseBranchId(branches);
 }

@@ -15,6 +15,13 @@ import { useSunatMutations } from "@/hooks/useSunatConfig";
 import { invoiceService } from "@/services/invoice.service";
 import type { Invoice } from "@/lib/types";
 
+const salesChannelLabels: Record<string, string> = {
+  pos: "POS",
+  admin_online_pos: "POS Tienda Virtual",
+  web_public: "Web Pública",
+  admin_manual: "Manual",
+};
+
 interface InvoiceDetailProps {
   invoice: Invoice | null;
   open: boolean;
@@ -97,6 +104,12 @@ export function InvoiceDetail({ invoice, open, onOpenChange, getBranchName }: In
               <p className="text-muted-foreground">Fecha de Emisión</p>
               <p className="font-medium">{formatDateLong(invoice.issue_date)}</p>
               <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><Building2 className="w-3 h-3" />{getBranchName(invoice.branch_id)}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Canal: {salesChannelLabels[invoice.sales_channel || "admin_manual"] || invoice.sales_channel}
+                {invoice.stock_branch_id && invoice.stock_branch_id !== invoice.branch_id
+                  ? ` · Stock: ${getBranchName(invoice.stock_branch_id)}`
+                  : ""}
+              </p>
             </div>
           </div>
 

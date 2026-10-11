@@ -40,19 +40,21 @@ export function useBranches() {
 
   const getStockForProduct = useCallback(
     (branchId: string, productId: string) =>
-      getBranchStock(branchStocks, branchId, productId),
-    [branchStocks]
+      getBranchStock(branchStocks, branchId, productId, branches),
+    [branchStocks, branches]
   );
 
   const getTotalStockForProduct = useCallback(
-    (productId: string) => getTotalStock(branchStocks, productId),
-    [branchStocks]
+    (productId: string) => getTotalStock(branchStocks, productId, branches),
+    [branchStocks, branches]
   );
 
   const getBranchStocks = useCallback(
-    (branchId: string) =>
-      branchStocks.filter((bs) => bs.branch_id === branchId),
-    [branchStocks]
+    (branchId: string) => {
+      const resolvedBranchId = branches.find((b) => b.id === branchId)?.stock_source_branch_id || branchId;
+      return branchStocks.filter((bs) => bs.branch_id === resolvedBranchId);
+    },
+    [branchStocks, branches]
   );
 
   return {
