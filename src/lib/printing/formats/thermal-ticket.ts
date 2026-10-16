@@ -135,13 +135,13 @@ export async function generateThermalTicket(
 
   function sep(y: number) {
     doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.15);
+    doc.setLineWidth(0.25);
     doc.line(M, y, W - M, y);
   }
 
   function lightSep(y: number) {
-    doc.setDrawColor(180, 180, 180);
-    doc.setLineWidth(0.1);
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.2);
     doc.line(M, y, W - M, y);
   }
 
@@ -180,23 +180,23 @@ export async function generateThermalTicket(
   y += 7;
 
   if (legalName) {
-    doc.setFont(FONT, "normal");
-    doc.setTextColor(60, 60, 60);
+    doc.setFont(FONT, "bold");
+    doc.setTextColor(0, 0, 0);
     ctext(legalName, y, 6);
     y += 5;
   }
 
   if (sellerInfo.ruc) {
-    doc.setFont(FONT, "normal");
-    doc.setTextColor(60, 60, 60);
+    doc.setFont(FONT, "bold");
+    doc.setTextColor(0, 0, 0);
     ctext(`RUC: ${sellerInfo.ruc}`, y, 6);
     y += 5;
   }
 
   const addrParts = [sellerInfo.direccion, sellerInfo.distrito, sellerInfo.provincia, sellerInfo.departamento].filter(Boolean);
   if (addrParts.length > 0) {
-    doc.setFont(FONT, "normal");
-    doc.setTextColor(80, 80, 80);
+    doc.setFont(FONT, "bold");
+    doc.setTextColor(0, 0, 0);
     const addrText = addrParts.join(", ");
     const addrLines = doc.splitTextToSize(addrText, CW);
     doc.setFontSize(5);
@@ -207,15 +207,15 @@ export async function generateThermalTicket(
   }
 
   if (sellerInfo.phone) {
-    doc.setFont(FONT, "normal");
-    doc.setTextColor(80, 80, 80);
+    doc.setFont(FONT, "bold");
+    doc.setTextColor(0, 0, 0);
     ctext(`Tel: ${sellerInfo.phone}`, y, 5);
     y += 4;
   }
 
   if (sellerInfo.email) {
-    doc.setFont(FONT, "normal");
-    doc.setTextColor(80, 80, 80);
+    doc.setFont(FONT, "bold");
+    doc.setTextColor(0, 0, 0);
     ctext(`Email: ${sellerInfo.email}`, y, 5);
     y += 4;
   }
@@ -237,8 +237,8 @@ export async function generateThermalTicket(
   y += 5;
 
   if (options?.branchName) {
-    doc.setFont(FONT, "normal");
-    doc.setTextColor(80, 80, 80);
+    doc.setFont(FONT, "bold");
+    doc.setTextColor(0, 0, 0);
     ctext(`Sede: ${options.branchName}`, y, 5);
     y += 4;
   }
@@ -249,8 +249,8 @@ export async function generateThermalTicket(
   // FECHA Y HORA
   // ═══════════════════════════════════════════
 
-  doc.setFont(FONT, "normal");
-  doc.setTextColor(60, 60, 60);
+  doc.setFont(FONT, "bold");
+  doc.setTextColor(0, 0, 0);
   const dateStr = formatIssueDate(invoice.issue_date);
   const timeStr = new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   ltext(`Fecha: ${dateStr}`, y, 5.5);
@@ -268,14 +268,14 @@ export async function generateThermalTicket(
   ltext("CLIENTE", y, 5.5);
   y += 4;
 
-  doc.setFont(FONT, "normal");
+  doc.setFont(FONT, "bold");
   doc.setTextColor(0, 0, 0);
   ltext(invoice.customer?.name || "Consumidor Final", y, 6.5);
   y += 5;
 
   const docLabel = invoice.customer?.document_type || "DNI";
   const docNum = invoice.customer?.document_number || "00000000";
-  doc.setTextColor(60, 60, 60);
+  doc.setTextColor(0, 0, 0);
   ltext(`${docLabel}: ${docNum}`, y, 5.5);
   y += 4;
 
@@ -287,8 +287,8 @@ export async function generateThermalTicket(
 
   const items = invoice.items || [];
   if (items.length === 0) {
-    doc.setFont(FONT, "normal");
-    doc.setTextColor(100, 100, 100);
+    doc.setFont(FONT, "bold");
+    doc.setTextColor(0, 0, 0);
     ctext("(sin productos)", y, 5.5);
     y += 4;
   } else {
@@ -313,7 +313,7 @@ export async function generateThermalTicket(
       const unitPrice = formatCents(item.unit_price_cents || 0);
       const lineTotal = formatCents(item.line_total_cents || 0);
 
-      doc.setFont(FONT, "normal");
+      doc.setFont(FONT, "bold");
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(5.5);
 
@@ -331,7 +331,7 @@ export async function generateThermalTicket(
       }
 
       doc.setFontSize(4.5);
-      doc.setTextColor(90, 90, 90);
+      doc.setTextColor(0, 0, 0);
       doc.text(`P.Unit: ${unitPrice}`, M, y);
       if (sku) doc.text(`SKU: ${sku}`, W - M, y, { align: "right" });
       y += 2.8;
@@ -354,38 +354,38 @@ export async function generateThermalTicket(
   ltext("DESGLOSE TRIBUTARIO", y, 5.5);
   y += 4;
 
-  doc.setFont(FONT, "normal");
+  doc.setFont(FONT, "bold");
   doc.setFontSize(5.5);
 
   if (invoice.gravada_cents > 0) {
-    doc.setTextColor(60, 60, 60);
+    doc.setTextColor(0, 0, 0);
     ltext("Op. Gravadas (10)", y, 5.5);
     doc.setTextColor(0, 0, 0);
     rtext(formatCents(invoice.gravada_cents), y, 5.5);
     y += 3.5;
   }
   if (invoice.exonerada_cents > 0) {
-    doc.setTextColor(60, 60, 60);
+    doc.setTextColor(0, 0, 0);
     ltext("Op. Exoneradas (20)", y, 5.5);
     doc.setTextColor(0, 0, 0);
     rtext(formatCents(invoice.exonerada_cents), y, 5.5);
     y += 3.5;
   }
   if (invoice.inafecta_cents > 0) {
-    doc.setTextColor(60, 60, 60);
+    doc.setTextColor(0, 0, 0);
     ltext("Op. Inafectas (30)", y, 5.5);
     doc.setTextColor(0, 0, 0);
     rtext(formatCents(invoice.inafecta_cents), y, 5.5);
     y += 3.5;
   }
 
-  doc.setTextColor(60, 60, 60);
+  doc.setTextColor(0, 0, 0);
   ltext(`IGV (${(IGV_RATE * 100).toFixed(0)}%)`, y, 5.5);
   doc.setTextColor(0, 0, 0);
   rtext(formatCents(invoice.igv_cents || 0), y, 5.5);
   y += 2;
 
-  doc.setTextColor(60, 60, 60);
+  doc.setTextColor(0, 0, 0);
   ltext("Moneda: SOLES (PEN)", y, 5.5);
   y += 2;
 
@@ -404,8 +404,8 @@ export async function generateThermalTicket(
 
   // ─── SON: (monto en letras) ───
   const amountText = centsToText(invoice.total_cents || 0);
-  doc.setFont(FONT, "normal");
-  doc.setTextColor(60, 60, 60);
+  doc.setFont(FONT, "bold");
+  doc.setTextColor(0, 0, 0);
   doc.setFontSize(5);
   const sonLines = doc.splitTextToSize(`SON: ${amountText}`, CW);
   for (const line of sonLines) {
@@ -421,28 +421,28 @@ export async function generateThermalTicket(
 
   if (invoice.payment_method) {
     const methodLabel = PAYMENT_METHODS[invoice.payment_method]?.label || invoice.payment_method;
-    doc.setFont(FONT, "normal");
-    doc.setTextColor(60, 60, 60);
+    doc.setFont(FONT, "bold");
+    doc.setTextColor(0, 0, 0);
     ltext(`Pago: ${methodLabel}`, y, 5.5);
     y += 4;
   }
 
   if (invoice.payment_method === "cash" && options?.cashReceivedCents !== undefined) {
-    doc.setFont(FONT, "normal");
+    doc.setFont(FONT, "bold");
     doc.setTextColor(0, 0, 0);
     ltext(`Recibido: ${formatCents(options.cashReceivedCents)}`, y, 5.5);
     y += 4;
     const change = options.cashReceivedCents - (invoice.total_cents || 0);
     if (change > 0) {
-      doc.setTextColor(60, 60, 60);
+      doc.setTextColor(0, 0, 0);
       ltext(`Vuelto: ${formatCents(change)}`, y, 5.5);
       y += 4;
     }
   }
 
   if (invoice.notes) {
-    doc.setFont(FONT, "normal");
-    doc.setTextColor(80, 80, 80);
+    doc.setFont(FONT, "bold");
+    doc.setTextColor(0, 0, 0);
     ltext(`Obs: ${invoice.notes}`, y, 5.5);
     y += 4;
   }
@@ -461,8 +461,8 @@ export async function generateThermalTicket(
     });
     const legalText = getLegalBasisText(determination, options.taxConfig.sellerProvinceCode, options.taxConfig.sellerDistrictCode);
     if (legalText) {
-      doc.setFont(FONT, "normal");
-      doc.setTextColor(60, 60, 60);
+      doc.setFont(FONT, "bold");
+      doc.setTextColor(0, 0, 0);
       const lines = doc.splitTextToSize(legalText, CW);
       doc.setFontSize(4.5);
       doc.text(lines, M, y);
@@ -477,8 +477,8 @@ export async function generateThermalTicket(
   if (invoice.sunat_hash) {
     sep(y); y += 4;
 
-    doc.setFont(FONT, "normal");
-    doc.setTextColor(80, 80, 80);
+    doc.setFont(FONT, "bold");
+    doc.setTextColor(0, 0, 0);
     ctext("Representacion Impresa de la", y, 5); y += 3;
     ctext(`${typeLabel} ${invoice.number}`, y, 5); y += 3;
 
@@ -502,8 +502,8 @@ export async function generateThermalTicket(
       y += qrSize + 2;
     } catch { /* skip QR */ }
 
-    doc.setFont(FONT, "normal");
-    doc.setTextColor(80, 80, 80);
+    doc.setFont(FONT, "bold");
+    doc.setTextColor(0, 0, 0);
     ltext(`Hash: ${invoice.sunat_hash}`, y, 4.5); y += 3;
     ltext("Verifique en cpe.sunat.gob.pe", y, 4.5); y += 4;
   }
@@ -514,8 +514,8 @@ export async function generateThermalTicket(
 
   if (sellerInfo.ticketFooter) {
     sep(y); y += 3;
-    doc.setFont(FONT, "normal");
-    doc.setTextColor(80, 80, 80);
+    doc.setFont(FONT, "bold");
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(4.5);
     const footerLines = doc.splitTextToSize(sellerInfo.ticketFooter, CW);
     doc.text(footerLines, M, y);
@@ -528,8 +528,8 @@ export async function generateThermalTicket(
 
   sep(y); y += 3;
 
-  doc.setFont(FONT, "normal");
-  doc.setTextColor(100, 100, 100);
+  doc.setFont(FONT, "bold");
+  doc.setTextColor(0, 0, 0);
   ctext(`Katsumoto v2.1.7 — ${sellerInfo.nombreComercial || sellerInfo.razonSocial}`, y, 4.5);
   y += 3;
   ctext(new Date().toLocaleString("es-PE"), y, 4.5);

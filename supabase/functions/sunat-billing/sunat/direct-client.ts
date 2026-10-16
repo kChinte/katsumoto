@@ -2,6 +2,7 @@ import { encodeBase64 } from "jsr:@std/encoding/base64";
 import { loadP12FromStorage } from "./crypto/certificate.ts";
 import { signXml } from "./crypto/xml-signer.ts";
 import { getStatus, sendBill, sendSummary } from "./soap/soap-client.ts";
+import { summaryId } from "./utils/summary-date.ts";
 import { sendCpe, checkStatus } from "./gre/gre-rest-client.ts";
 import { buildDespatchXml } from "./xml/templates/despatch.ts";
 import { buildInvoiceXml } from "./xml/templates/invoice.ts";
@@ -61,6 +62,9 @@ function buildAsyncFileBasename(
   document: DbRecord,
   prefix: "RC" | "RA",
 ): string {
+  if (prefix === "RC") {
+    return `${credentials.ruc}-${summaryId(String(document.fecha_generacion), String(document.correlativo))}`;
+  }
   const date = String(
     document.fecha_resumen || document.fecha_referencia ||
       document.fecha_emision || "",

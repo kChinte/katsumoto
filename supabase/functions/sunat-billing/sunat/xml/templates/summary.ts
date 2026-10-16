@@ -1,4 +1,5 @@
 import type { DbRecord } from "../../types.ts";
+import { summaryId } from "../../utils/summary-date.ts";
 import { ensureArray, escapeXml, formatAmount } from "../helpers.ts";
 
 function buildSummaryLines(details: DbRecord[]): string {
@@ -81,9 +82,7 @@ export function buildSummaryXml(
   document: DbRecord,
   credentials: DbRecord,
 ): string {
-  const summaryId = `RC-${
-    String(document.fecha_resumen || "").replaceAll("-", "")
-  }-${escapeXml(document.correlativo)}`;
+  const id = summaryId(String(document.fecha_generacion), String(document.correlativo));
   const details = ensureArray(document.detalles as DbRecord[]);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -95,7 +94,7 @@ export function buildSummaryXml(
   </ext:UBLExtensions>
   <cbc:UBLVersionID>2.0</cbc:UBLVersionID>
   <cbc:CustomizationID>1.1</cbc:CustomizationID>
-  <cbc:ID>${summaryId}</cbc:ID>
+  <cbc:ID>${escapeXml(id)}</cbc:ID>
   <cbc:ReferenceDate>${escapeXml(document.fecha_resumen)}</cbc:ReferenceDate>
   <cbc:IssueDate>${escapeXml(document.fecha_generacion)}</cbc:IssueDate>
   <cac:Signature>

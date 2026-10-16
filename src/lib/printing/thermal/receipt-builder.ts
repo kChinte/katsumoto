@@ -443,7 +443,7 @@ export function buildEscposReceipt(
         .align("center")
         .bold(true)
         .line("*** REIMPRESION ***")
-        .bold(false)
+        .bold(true)
         .newline();
     }
 
@@ -452,10 +452,10 @@ export function buildEscposReceipt(
     builder.line(sellerInfo.razonSocial || sellerInfo.nombreComercial);
 
     if (sellerInfo.nombreComercial && sellerInfo.razonSocial !== sellerInfo.nombreComercial) {
-      builder.bold(false).line(sellerInfo.nombreComercial).bold(true);
+      builder.bold(true).line(sellerInfo.nombreComercial).bold(true);
     }
 
-    builder.bold(false).line(`RUC: ${sellerInfo.ruc}`);
+    builder.bold(true).line(`RUC: ${sellerInfo.ruc}`);
 
     const addrParts = [sellerInfo.direccion, sellerInfo.distrito, sellerInfo.provincia, sellerInfo.departamento].filter(Boolean);
     for (const part of wrapText(addrParts.join(", "), w)) {
@@ -479,7 +479,7 @@ export function buildEscposReceipt(
       .doubleSize(false)
       .bold(true)
       .line(invoice.number)
-      .bold(false);
+      .bold(true);
 
     if (options.branchName) {
       builder.line(`Sede: ${options.branchName}`);
@@ -498,7 +498,7 @@ export function buildEscposReceipt(
     builder.line(separator("-", w));
 
     // Customer
-    builder.bold(true).line("CLIENTE:").bold(false);
+    builder.bold(true).line("CLIENTE:").bold(true);
     builder.line(invoice.customer?.name || "Consumidor Final");
     const docLabel = invoice.customer?.document_type || "DOC";
     const docNumber = invoice.customer?.document_number || "00000000";
@@ -553,7 +553,7 @@ export function buildEscposReceipt(
       .bold(true)
       .line(twoColumnLine("TOTAL:", `S/ ${formatCentsShort(invoice.total_cents)}`, w))
       .doubleSize(false)
-      .bold(false);
+      .bold(true);
 
     builder.line(separator("=", w));
 
@@ -723,7 +723,7 @@ export function buildTestReceipt(paperWidth: PaperWidth = 80): ReceiptResult {
     .bold(true)
     .line("TEST DE IMPRESION")
     .doubleSize(false)
-    .bold(false)
+    .bold(true)
     .newline()
     .line(`Ancho: ${paperWidth}mm (${w} chars)`)
     .line(`Fecha: ${new Date().toLocaleString("es-PE")}`)

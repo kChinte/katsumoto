@@ -49,6 +49,26 @@ describe('invoice.service — creación de factura', () => {
   });
 
   describe('createWithItems', () => {
+    it.each([
+      ['boleta', 'F001', 'B001'],
+      ['boleta', 'F002', 'B002'],
+      ['boleta', 'B003', 'B003'],
+      ['factura', 'B002', 'F002'],
+      ['factura', 'F001', 'F001'],
+    ] as const)('selecciona serie para %s con sede %s', async (type, configured, expected) => {
+      mockSingle.mockResolvedValueOnce({ data: { invoice_serie_prefix: configured }, error: null });
+      mockRpc.mockResolvedValueOnce({ data: 5, error: null })
+        .mockResolvedValueOnce({ data: 'invoice-id', error: null });
+      const result = await invoiceService.createWithItems({
+        invoice_type: type, customer_id: 'customer-id', issue_date: '2026-10-14',
+        items: [{ product_name: 'Producto', quantity: 1, unit_price_cents: 1000, discount_percent: 0 }],
+      }, 'branch-id', 'cash', 'register-id');
+      expect(result.serie).toBe(expected);
+      expect(mockRpc.mock.calls[0][1].p_serie).toBe(expected);
+      expect(mockRpc.mock.calls[1][1].p_serie).toBe(expected);
+      expect(mockRpc.mock.calls[1][1].p_invoice_type).toBe(type);
+    });
+
     it('crea factura con items y llama a create_invoice_with_items RPC', async () => {
       mockSingle.mockResolvedValueOnce({
         data: { invoice_serie_prefix: 'F001' },

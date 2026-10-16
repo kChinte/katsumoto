@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 import { resolveAuth } from "./sunat/auth.ts";
 import { createSunatClient } from "./sunat/client.ts";
+import { peruDate, summaryId } from "./sunat/utils/summary-date.ts";
 import { VALID_ACTIONS } from "./sunat/constants.ts";
 import { corsHeaders, corsHeadersFor, error, json, setRequestOrigin } from "./sunat/http.ts";
 import { verifyCertInStorage } from "./sunat/storage.ts";
@@ -144,7 +145,8 @@ async function updateSummaryLogStatus(
     if (result.cdr_description) update.cdr_description = result.cdr_description;
   }
 
-  await (supabase.from("sunat_summary_log") as any).update(update).eq("id", summaryLogId);
+  const { error: saveError } = await (supabase.from("sunat_summary_log") as any).update(update).eq("id", summaryLogId);
+  if (saveError) throw new Error(`No se pudo guardar el resultado SUNAT: ${saveError.message}`);
 }
 
 async function handleTicketCheck(
@@ -182,7 +184,7 @@ async function handleTicketCheck(
           result.error_message ||
           (result.result as DbRecord)?.status_message ||
           null;
-        await (supabase.from("invoices") as any)
+        const { error: invoiceError } = await (supabase.from("invoices") as any)
           .update({
             status: "accepted",
             sunat_cdr_code: result.cdr_code || statusCode,
@@ -190,6 +192,7 @@ async function handleTicketCheck(
           })
           .eq("organization_id", orgId)
           .eq("sunat_ticket", ticket);
+        if (invoiceError) throw new Error(`No se pudo guardar la aceptacion de las boletas: ${invoiceError.message}`);
       } else if (statusCode === "99") {
         const errorMessage =
           result.error_message ||
@@ -220,6 +223,11 @@ async function handleSummary(
   body: DbRecord,
 ) {
   const fecha = body.fecha as string;
+  const generatedAt = new Date();
+  const generationDate = peruDate(generatedAt);
+  if (fecha > generationDate) {
+    return error("La fecha del resumen no puede ser posterior a la fecha actual de Peru", 400, "INVALID_DATE");
+  }
   if (!fecha) return error("fecha is required (YYYY-MM-DD)");
 
   const { data: boletas } = await supabase
@@ -286,13 +294,15 @@ async function handleSummary(
     .select("*", { count: "exact", head: true })
     .eq("organization_id", orgId)
     .eq("tipo", "resumen_diario")
-    .eq("fecha_referencia", fecha);
+    .gte("created_at", `${generationDate}T00:00:00-05:00`)
+    .lt("created_at", new Date(new Date(`${generationDate}T00:00:00-05:00`).getTime() + 86400000).toISOString());
 
   const correlativo = (count || 0) + 1;
   const summaryDoc = buildSummaryDocument(
     allDocs,
     fecha,
     correlativo,
+    generatedAt,
   );
 
   try {
@@ -320,7 +330,7 @@ async function handleSummary(
       }).select().single();
 
     if (result.success && result.xml) {
-      const xmlPath = `${orgId}/${fecha.substring(0, 7)}/RC-${fecha}-${correlativo}.xml`;
+      const xmlPath = `${orgId}/${generationDate.substring(0, 7)}/${summaryId(generationDate, String(correlativo))}.xml`;
       const xmlBytes = new TextEncoder().encode(result.xml as string);
       await supabase.storage.from("sunat-documents").upload(xmlPath, xmlBytes, {
         contentType: "application/xml",

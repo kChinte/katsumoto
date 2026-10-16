@@ -39,28 +39,28 @@ export async function drawHeader(ctx: PdfContext, y: number): Promise<number> {
 
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(255, 77, 0);
+  doc.setTextColor(0, 0, 0);
   doc.text(bizName.toUpperCase(), textX, y + 7);
 
   let nextY = y + 14;
   if (legalName) {
     doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(120, 120, 120);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
     doc.text(legalName, textX, nextY);
     nextY += 6;
   }
 
   doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(80, 80, 80);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
   doc.text(`RUC: ${sellerInfo.ruc}`, textX, nextY);
   nextY += 5;
 
   const addrParts = [sellerInfo.direccion, sellerInfo.distrito, sellerInfo.provincia, sellerInfo.departamento].filter(Boolean);
   if (addrParts.length > 0) {
     doc.setFontSize(7);
-    doc.setTextColor(120, 120, 120);
+    doc.setTextColor(0, 0, 0);
     doc.text(addrParts.join(", "), textX, nextY);
     nextY += 3.5;
   }
@@ -70,7 +70,7 @@ export async function drawHeader(ctx: PdfContext, y: number): Promise<number> {
     if (sellerInfo.phone) parts.push(`Tel: ${sellerInfo.phone}`);
     if (sellerInfo.email) parts.push(sellerInfo.email);
     doc.setFontSize(7);
-    doc.setTextColor(120, 120, 120);
+    doc.setTextColor(0, 0, 0);
     doc.text(parts.join(" · "), textX, nextY);
     nextY += 3.5;
   }
@@ -83,32 +83,32 @@ export async function drawHeader(ctx: PdfContext, y: number): Promise<number> {
   doc.text(typeLabel.toUpperCase(), rightX, y + 7, { align: "right" });
 
   doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(80, 80, 80);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
   doc.text(`N° ${invoice.number}`, rightX, y + 14, { align: "right" });
 
   if (options.branchName) {
     doc.setFontSize(8);
-    doc.setTextColor(130, 130, 130);
+    doc.setTextColor(0, 0, 0);
     doc.text(`Sede: ${options.branchName}`, rightX, y + 20, { align: "right" });
   }
 
   const headerBottom = Math.max(nextY, y + 24);
-  doc.setDrawColor(200, 200, 200);
+  doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.5);
   doc.line(margin, headerBottom + 2, rightX, headerBottom + 2);
 
   const infoY = headerBottom + 6;
   doc.setFontSize(8);
-  doc.setTextColor(100, 100, 100);
-  doc.setFont("helvetica", "normal");
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "bold");
   doc.text("Fecha de Emisión:", margin, infoY);
   doc.setTextColor(0, 0, 0);
   doc.setFont("helvetica", "bold");
   doc.text(formatDatePDF(invoice.issue_date), margin + 28, infoY);
 
-  doc.setTextColor(100, 100, 100);
-  doc.setFont("helvetica", "normal");
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "bold");
   doc.text("Moneda:", margin + 85, infoY);
   doc.setTextColor(0, 0, 0);
   doc.setFont("helvetica", "bold");

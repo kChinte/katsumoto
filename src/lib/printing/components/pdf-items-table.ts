@@ -28,8 +28,8 @@ export function drawItemsTable(ctx: PdfContext, y: number): number {
     head: [["#", "Descripción", "Cant.", "P. Unit.", "Desc.", "Afectación", "IGV", "Total"]],
     body: tableData,
     theme: "striped",
-    headStyles: { fillColor: [255, 77, 0], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8 },
-    bodyStyles: { fontSize: 7.5, textColor: [30, 30, 30] },
+    headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: "bold", fontSize: 8, lineColor: [0, 0, 0], lineWidth: 0.2 },
+    bodyStyles: { fontSize: 7.5, textColor: [0, 0, 0], fontStyle: "bold" },
     columnStyles: {
       0: { halign: "center", cellWidth: 8 },
       1: { cellWidth: 44 },
@@ -40,7 +40,7 @@ export function drawItemsTable(ctx: PdfContext, y: number): number {
       6: { halign: "right", cellWidth: 20 },
       7: { halign: "right", cellWidth: 24, fontStyle: "bold" },
     },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
+    alternateRowStyles: { fillColor: [255, 255, 255] },
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

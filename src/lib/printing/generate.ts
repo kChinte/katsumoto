@@ -21,19 +21,19 @@ function drawMiniHeader(ctx: PdfContext): number {
 
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(255, 77, 0);
+  doc.setTextColor(0, 0, 0);
   doc.text(sellerInfo.nombreComercial || sellerInfo.razonSocial, margin, y);
 
-  doc.setTextColor(80, 80, 80);
-  doc.setFont("helvetica", "normal");
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "bold");
   doc.text(`RUC: ${sellerInfo.ruc}`, margin + 70, y);
 
   const typeLabel = INVOICE_TYPES[invoice.invoice_type]?.label || invoice.invoice_type.toUpperCase();
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(30, 30, 30);
+  doc.setTextColor(0, 0, 0);
   doc.text(`${typeLabel} ${invoice.number}`, pageWidth - margin, y, { align: "right" });
 
-  doc.setDrawColor(200, 200, 200);
+  doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.3);
   doc.line(margin, y + 4, pageWidth - margin, y + 4);
 

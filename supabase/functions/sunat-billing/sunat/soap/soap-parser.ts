@@ -98,7 +98,7 @@ export function parseSendBillResponse(xml: string): ParsedSendBillResponse {
     };
   }
 
-  const cdrZip = decodeBase64(applicationResponse);
+  const cdrZip = decodeBase64(applicationResponse.replace(/\s/g, ""));
   const cdr = parseCdr(cdrZip);
 
   return {
@@ -139,8 +139,21 @@ export function parseGetStatusResponse(xml: string): ParsedTicketResponse {
   const statusMessage = extractTag(xml, ["statusMessage"]);
   const content = extractTag(xml, ["content"]);
 
+  if (statusCode && !["0", "98", "99"].includes(statusCode)) {
+    return {
+      success: false,
+      statusCode,
+      errorCode: statusCode,
+      errorMessage: statusMessage || content || "SUNAT no pudo consultar el ticket.",
+    };
+  }
+
+  if (statusCode === "98") {
+    return { success: true, statusCode, statusMessage };
+  }
+
   if (content) {
-    const cdrZip = decodeBase64(content);
+    const cdrZip = decodeBase64(content.replace(/\s/g, ""));
     const cdr = parseCdr(cdrZip);
     return {
       success: true,

@@ -7,6 +7,7 @@ import {
   UNIT_MAP,
 } from "./constants.ts";
 import { numeroALetras } from "./utils/number-to-words.ts";
+import { peruDate } from "./utils/summary-date.ts";
 import type { DbRecord, SunatCredentials } from "./types.ts";
 
 export function centsToDecimal(cents: number): number {
@@ -216,10 +217,11 @@ export function buildSummaryDocument(
   documents: DbRecord[],
   fecha: string,
   correlativo: number,
+  now = new Date(),
 ) {
   return {
     fecha_resumen: fecha,
-    fecha_generacion: new Date().toISOString().split("T")[0],
+    fecha_generacion: peruDate(now),
     correlativo: String(correlativo),
     detalles: documents.map((doc) => {
       const customer = doc.customer as DbRecord;

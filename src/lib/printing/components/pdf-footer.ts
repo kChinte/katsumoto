@@ -7,11 +7,11 @@ export function drawFooter(ctx: PdfContext, y: number): number {
 
   if (invoice.notes) {
     doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(100, 100, 100);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
     doc.text("Observaciones:", margin, y);
     y += 4;
-    doc.setTextColor(60, 60, 60);
+    doc.setTextColor(0, 0, 0);
     doc.text(invoice.notes, margin, y, { maxWidth: contentWidth });
     y += 8;
   }
@@ -34,10 +34,10 @@ export function drawFooter(ctx: PdfContext, y: number): number {
       const boxHeight = textLines.length * 3.5 + 8;
       doc.roundedRect(margin, y, contentWidth, boxHeight, 2, 2, "F");
       doc.setFontSize(6.5);
-      doc.setTextColor(22, 101, 52);
+      doc.setTextColor(0, 0, 0);
       doc.text("Base Legal:", margin + 3, y + 4);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(21, 128, 61);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0, 0, 0);
       doc.text(textLines, margin + 3, y + 8);
       y += boxHeight + 4;
     }
@@ -45,7 +45,7 @@ export function drawFooter(ctx: PdfContext, y: number): number {
 
   const footerY = doc.internal.pageSize.getHeight() - 15;
   doc.setFontSize(7);
-  doc.setTextColor(150, 150, 150);
+  doc.setTextColor(0, 0, 0);
   const footerName = sellerInfo.nombreComercial || sellerInfo.razonSocial;
   doc.text(`Documento generado por ${footerName}`, pageWidth / 2, footerY, { align: "center" });
   doc.text(

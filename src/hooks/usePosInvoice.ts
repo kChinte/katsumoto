@@ -11,7 +11,7 @@ import { registerService } from "@/services/register.service";
 import { customerService } from "@/services/customer.service";
 import { formatInvoiceNumber } from "@/lib/format";
 import { getBranchStock } from "@/lib/utils/stock";
-import { DEFAULT_SERIES, INVOICE_TYPES } from "@/lib/constants";
+import { INVOICE_TYPES } from "@/lib/constants";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   Invoice,
@@ -168,14 +168,13 @@ export function usePosInvoice(cart: CartItem[], calc: InvoiceCalculation | null)
       method: PaymentMethod;
     }) => {
       if (!calc || !openRegister || !activeBranch) return null;
-      const defaultSerie = DEFAULT_SERIES[invoiceType];
-      const _serie = activeBranch.invoice_serie_prefix || defaultSerie;
-      const client = clientId !== "none" ? clients.find((c) => c.id === clientId) : null;
-      const customer = client
-        ? { id: client.id, name: client.name, document_number: client.document_number, document_type: client.document_type }
-        : defaultCustomer
-        ? { id: defaultCustomer.id, name: defaultCustomer.name, document_number: defaultCustomer.document_number, document_type: defaultCustomer.document_type }
-        : null;
+      const selectedId = clientId && clientId !== "none"
+        ? clientId
+        : invoiceType === "boleta" ? defaultCustomer?.id : undefined;
+      if (!selectedId) {
+        throw new Error("Selecciona un cliente valido antes de emitir el comprobante.");
+      }
+      const customer = await customerService.getInvoiceCustomer(selectedId, invoiceType);
 
       if (!customer) {
         showError("No se encontró el cliente 'Consumidor Final' (DNI 00000000). Créelo en Clientes.");
@@ -198,7 +197,9 @@ export function usePosInvoice(cart: CartItem[], calc: InvoiceCalculation | null)
         {
           customer_id: customer.id,
           invoice_type: invoiceType,
-          issue_date: new Date().toISOString().split("T")[0],
+          issue_date: new Intl.DateTimeFormat("en-CA", {
+            timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit",
+          }).format(new Date()),
           items: rpcItems,
         },
         activeBranch.id,

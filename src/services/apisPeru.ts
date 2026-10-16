@@ -31,7 +31,12 @@ async function callProxy(type: "ruc" | "dni", number: string): Promise<Record<st
   });
 
   if (error) {
-    const message = error.message || "Error al consultar el servicio";
+    let message = error.message || "Error al consultar el servicio";
+    if (error.context instanceof Response) {
+      const details = await error.context.clone().json().catch(() => null);
+      if (typeof details?.error === "string") message = details.error;
+      else if (typeof details?.message === "string") message = details.message;
+    }
     throw new Error(message);
   }
 

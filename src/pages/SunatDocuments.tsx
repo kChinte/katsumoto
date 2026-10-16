@@ -25,7 +25,9 @@ export default function SunatDocuments() {
   const { data: alerts = [] } = useSunatAlerts(orgId);
   const { queue, retry } = useSunatPendingQueue(orgId);
 
-  const [summaryDate, setSummaryDate] = useState(new Date().toISOString().split("T")[0]);
+  const [summaryDate, setSummaryDate] = useState(() => new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date()));
   const [voidedInvoiceId, setVoidedInvoiceId] = useState("");
   const [voidedMotivo, setVoidedMotivo] = useState("ERROR EN EMISION");
 

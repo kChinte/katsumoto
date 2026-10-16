@@ -81,7 +81,11 @@ export const invoiceService = {
     if (branchError) throw branchError;
 
     const defaultSerie = formData.invoice_type === "factura" ? "F001" : "B001";
-    const serie = branchData?.invoice_serie_prefix || defaultSerie;
+    const configuredSerie = branchData?.invoice_serie_prefix?.trim().toUpperCase();
+    const serie = configuredSerie && /^[FB][A-Z0-9]{3}$/.test(configuredSerie)
+      && (formData.invoice_type === "factura" || formData.invoice_type === "boleta")
+      ? `${defaultSerie[0]}${configuredSerie.slice(1)}`
+      : configuredSerie || defaultSerie;
 
     const calc: InvoiceCalculation = calculateInvoice(formData.items);
 

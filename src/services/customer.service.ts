@@ -4,6 +4,17 @@ import type { Customer, CustomerFormData } from "@/lib/types";
 import { isUbigeoSelva } from "@/lib/tax-engine";
 
 export const customerService = {
+  async getInvoiceCustomer(id: string, invoiceType: string): Promise<Customer> {
+    const customer = await this.getById(id);
+    if (!customer || !customer.is_active) {
+      throw new Error("El cliente seleccionado no esta disponible. Vuelve a seleccionarlo.");
+    }
+    if (invoiceType === "factura" && (customer.document_type !== "RUC" || !/^\d{11}$/.test(customer.document_number))) {
+      throw new Error("Para emitir una factura debes seleccionar un cliente con RUC.");
+    }
+    return customer;
+  },
+
   async getAll(): Promise<Customer[]> {
     const orgId = await getCurrentOrgId();
     const { data, error } = await supabase

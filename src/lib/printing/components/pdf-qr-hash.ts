@@ -25,7 +25,7 @@ export async function drawQrHash(ctx: PdfContext, y: number): Promise<number> {
     invoice.sunat_hash || "",
   ].join("|");
 
-  doc.setDrawColor(200, 200, 200);
+  doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.3);
   doc.line(margin, y, rightX, y);
   y += 5;
@@ -42,29 +42,29 @@ export async function drawQrHash(ctx: PdfContext, y: number): Promise<number> {
   const textW = rightX - margin - (qrBase64 ? QR_SIZE_MM + 4 : 0);
 
   doc.setFontSize(6.5);
-  doc.setTextColor(100, 100, 100);
-  doc.setFont("helvetica", "italic");
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "bold");
   doc.text("Representación Impresa de:", margin, y);
   y += 4;
 
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(50, 50, 50);
+  doc.setTextColor(0, 0, 0);
   doc.setFontSize(7);
   doc.text(`${typeLabel} ${invoice.number}`, margin, y);
   y += 4;
 
   if (hasHash) {
     doc.setFontSize(6.5);
-    doc.setTextColor(90, 90, 90);
-    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0, 0, 0);
+    doc.setFont("helvetica", "bold");
     doc.text(`Hash: ${invoice.sunat_hash}`, margin, y, { maxWidth: textW });
     y += 4;
   }
 
   if (!hasHash) {
     doc.setFontSize(6);
-    doc.setTextColor(130, 130, 130);
-    doc.setFont("helvetica", "italic");
+    doc.setTextColor(0, 0, 0);
+    doc.setFont("helvetica", "bold");
     doc.text("Comprobante pendiente de envío a SUNAT", margin, y);
     y += 4;
   }
